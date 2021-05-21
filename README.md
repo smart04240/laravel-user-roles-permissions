@@ -1,6 +1,6 @@
-## Laravel8 user roles and permission
+# Laravel8 user roles and permission
 
-### Project setup
+## Project setup
 
 1. composer install
 ```
@@ -17,14 +17,14 @@ cp -n .env.example .env
 php artisan migrate:fresh --seed
 ```
 
-### Running the project
+## Running the project
 ```
 php artisan serve
 ```
 
-### development guide
+## development guide
 
-#### Basic
+### Basic
 First, add the Spatie\Permission\Traits\HasRoles trait to your User model(s):
 ```
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -60,9 +60,8 @@ A permission can be removed from a role using 1 of these methods:
 $role->revokePermissionTo($permission);
 $permission->removeRole($role);
 ```
-See more here: https://spatie.be/docs/laravel-permission/v4/basic-usage/basic-usage
 
-#### Using middleware
+### Using middleware
 This package comes with RoleMiddleware, PermissionMiddleware and RoleOrPermissionMiddleware middleware. You can add them inside your app/Http/Kernel.php file.
 ```
 protected $routeMiddleware = [
@@ -87,9 +86,7 @@ public function __construct()
   $this->middleware('permission:article-submit', ['only' => ['create','store']]);
 }
 ```
-See more here: https://spatie.be/docs/laravel-permission/v4/basic-usage/middleware
-
-#### Using in blade view
+### Using in blade view
 
 Permission
 ```
@@ -109,6 +106,4 @@ Role
     //
 @else
     //
-@endrole
-
-See more here: https://spatie.be/docs/laravel-permission/v4/basic-usage/blade-directives
+@endrole 
