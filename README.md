@@ -1,61 +1,114 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400"></a></p>
+## Laravel8 user roles and permission
 
-<p align="center">
-<a href="https://travis-ci.org/laravel/framework"><img src="https://travis-ci.org/laravel/framework.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+### Project setup
 
-## About Laravel
+1. composer install
+```
+composer install
+```
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+2. configration
+```
+cp -n .env.example .env
+```
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+3. database setup
+```
+php artisan migrate:fresh --seed
+```
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### Running the project
+```
+php artisan serve
+```
 
-## Learning Laravel
+### development guide
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+#### Basic
+First, add the Spatie\Permission\Traits\HasRoles trait to your User model(s):
+```
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Spatie\Permission\Traits\HasRoles;
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 1500 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+class User extends Authenticatable
+{
+    use HasRoles;
 
-## Laravel Sponsors
+    // ...
+}
+```
+Every role is associated with multiple permissions. A Role and a Permission are regular Eloquent models. They require a name and can be created like this:
+```
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\Models\Permission;
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+$role = Role::create(['name' => 'Berichtswesen 1']);
+$permission = Permission::create(['name' => 'article-view']);
+```
+A permission can be assigned to a role using 1 of these methods:
+```
+$role->givePermissionTo($permission);
+$permission->assignRole($role);
+```
+Multiple permissions can be synced to a role using 1 of these methods:
+```
+$role->syncPermissions($permissions);
+$permission->syncRoles($roles);
+```
+A permission can be removed from a role using 1 of these methods:
+```
+$role->revokePermissionTo($permission);
+$permission->removeRole($role);
+```
+See more here: https://spatie.be/docs/laravel-permission/v4/basic-usage/basic-usage
 
-### Premium Partners
+#### Using middleware
+This package comes with RoleMiddleware, PermissionMiddleware and RoleOrPermissionMiddleware middleware. You can add them inside your app/Http/Kernel.php file.
+```
+protected $routeMiddleware = [
+    // ...
+    'role' => \Spatie\Permission\Middlewares\RoleMiddleware::class,
+    'permission' => \Spatie\Permission\Middlewares\PermissionMiddleware::class,
+    'role_or_permission' => \Spatie\Permission\Middlewares\RoleOrPermissionMiddleware::class,
+];
+```
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[OP.GG](https://op.gg)**
+Then you can protect your routes using middleware rules:
+```
+Route::group(['middleware' => ['permission:article-submit']], function () {
+    //
+});
+```
 
-## Contributing
+You can protect your controllers similarly, by setting desired middleware in the constructor:
+```
+public function __construct()
+{
+  $this->middleware('permission:article-submit', ['only' => ['create','store']]);
+}
+```
+See more here: https://spatie.be/docs/laravel-permission/v4/basic-usage/middleware
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+#### Using in blade view
 
-## Code of Conduct
+Permission
+```
+@can('article-submit')
+    <a class="btn btn-success" href="{{ route('articles.create') }}"> Create New Article</a>
+@endcan
+```
+or
+```
+@if(auth()->user()->can('article-edit') && $some_other_condition)
+    <a class="btn btn-primary" href="{{ route('articles.edit',$article->id) }}">Edit</a>
+@endif
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Role
+@role('Vertragswesen 2')
+    //
+@else
+    //
+@endrole
 
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+See more here: https://spatie.be/docs/laravel-permission/v4/basic-usage/blade-directives

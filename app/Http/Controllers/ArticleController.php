@@ -14,7 +14,7 @@ class ArticleController extends Controller
      */
     function __construct()
     {
-         $this->middleware('permission:article-view|product-submit|product-edit|product-delete', ['only' => ['index','show']]);
+         $this->middleware('permission:article-view|article-submit|article-edit|article-delete', ['only' => ['index','show']]);
          $this->middleware('permission:article-submit', ['only' => ['create','store']]);
          $this->middleware('permission:article-edit', ['only' => ['edit','update']]);
          $this->middleware('permission:article-delete', ['only' => ['destroy']]);
