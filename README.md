@@ -61,6 +61,28 @@ $role->revokePermissionTo($permission);
 $permission->removeRole($role);
 ```
 
+A role can be assigned to any user:
+```
+$user->assignRole('Berichtswesen 1');
+// or
+$role = Role::create(['name' => 'Berichtswesen 1']);
+$user->assignRole($role);
+
+// You can also assign multiple roles at once
+$user->assignRole('Vertragswesen 1', 'Berichtswesen 1');
+// or as an array
+$user->assignRole(['Vertragswesen 2', 'Berichtswesen 2']);
+```
+Additionally, individual permissions can be assigned to the user too. For instance
+```
+$role = Role::findByName('Berichtswesen 1');
+$role->givePermissionTo('article-view');
+
+$user->assignRole($role);
+
+$user->givePermissionTo('article-delete');
+```
+
 ### Using middleware
 This package comes with RoleMiddleware, PermissionMiddleware and RoleOrPermissionMiddleware middleware. You can add them inside your app/Http/Kernel.php file.
 ```
